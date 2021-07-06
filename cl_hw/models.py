@@ -16,7 +16,7 @@ class Author(models.Model):
 
 class Quotes(models.Model):
     quotes = models.TextField()
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ['id']
