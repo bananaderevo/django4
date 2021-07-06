@@ -6,10 +6,14 @@ from django.shortcuts import render
 from .forms import SendMailForm
 from django.utils import timezone
 
+from bs4 import BeautifulSoup
+import requests
+
 now = timezone.now()
 
 
 def send(request):
+    quotes()
     if request.method == 'POST':
         form = SendMailForm(request.POST)
         if form.is_valid():
@@ -31,3 +35,9 @@ def send(request):
     }
 
     return render(request, 'cl_hw/index.html', data)
+
+
+def quotes():
+    url = 'https://quotes.toscrape.com/'
+    page = requests.get(url)
+    print(page.text)
