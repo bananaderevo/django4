@@ -11,7 +11,6 @@ now = timezone.now()
 
 
 def send(request):
-    quotes.delay()
     if request.method == 'POST':
         form = SendMailForm(request.POST)
         if form.is_valid():

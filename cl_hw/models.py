@@ -3,8 +3,8 @@ from django.db import models
 
 class Author(models.Model):
     name = models.CharField(max_length=50)
-    born_info = models.CharField(max_length=100)
-    description = models.TextField()
+    born_info = models.CharField(max_length=100, null=True)
+    description = models.TextField(null=True)
 
     class Meta:
         ordering = ['id']

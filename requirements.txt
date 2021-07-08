@@ -2,8 +2,11 @@ amqp==5.0.6
 beautifulsoup4==4.9.3
 celery==5.1.2
 Django==3.2.5
-django-redis==5.0.0
 django-shell-plus==1.1.7
 ipython==7.25.0
 requests==2.25.1
-
+django-celery-beat==2.2.1
+django-shell-plus==1.1.7
+django-timezone-field==4.2.1
+requests==2.25.1
+python-crontab==2.5.1

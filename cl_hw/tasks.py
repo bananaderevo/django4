@@ -1,11 +1,12 @@
+import sys
+
 from celery import shared_task
 from django.core.mail import send_mail
 from django4.settings import EMAIL_HOST_USER
 from bs4 import BeautifulSoup
 import requests
-from .models import *
+from .models import Author, Quotes
 import time
-import re
 
 
 @shared_task
@@ -16,39 +17,40 @@ def send_mail_to(subject, message, receivers):
 @shared_task
 def quotes():
     a = time.time()
-    o = 1
+    page = 1
     p = 0
-
-    while p != 1:
-        url = f'https://quotes.toscrape.com/page/{o}/'
+    while p < 5:
+        url = f'https://quotes.toscrape.com/page/{page}/'
         response = requests.get(url)
         soup = BeautifulSoup(response.text, features='html.parser')
-        quo2 = soup.find_all('li', class_='next')
-        # link = soup.find('div', class_='quote').a
-        # print(link['href'])
-        # # print(re.findall(r'""(.*?)""', str(link)))
-        # p = 1
-        print(f'IN {url}: ', o)
-        if not quo2:
-            p = 1
+        sys.stdout.write(f'IN {url}: {page}')
+        if not soup.find_all('li', class_='next'):
+            p = 5
+            send_mail_to('Quotes Task!', 'There are not new quotes.', 'admin@admin.com')
 
-        quo1 = soup.find_all('span', class_='text')
         quo = soup.find_all('div', class_='quote')
 
         for i in quo:
+            url2 = 'https://quotes.toscrape.com'+i.find('a').get('href')
+            response2 = requests.get(url2)
+            i2 = BeautifulSoup(response2.text, features='html.parser')
             text = i.find('span', class_='text').text
             author = i.find('small', class_='author').text
+            born_date = i2.find('span', class_='author-born-date').string
+            born_location = i2.find('span', class_='author-born-location').string
+            description_text = i2.find('div', class_='author-description').string
+
             if not Quotes.objects.filter(quotes=text).exists():
-                Quotes.objects.create(quotes=text).author.set(Author.objects.get_or_create(name=author))
-            # if not Author.objects.filter(name=author.text).exists():
-            #     link = soup.find('div', class_='quote').a['href']
-            #     soup2 = BeautifulSoup(requests.get(f'https://quotes.toscrape.com/{link}').text, features='html.parser')
-            #     Author.objects.create(name=author.text,
-            #                           born_info=soup.find('span', class_='author-born-date') + soup.find('span', class_='author-born-location'),
-            #                           description=soup.find('div', class_='author-description'))
-            #     Quotes.objects.create(quotes=text.text).author=Author.objects.last()
-            # elif Author.objects.filter(name=author.text).exists() and Quotes.objects.filter(quotes=text.text).exists() == False:
-            #     Quotes.objects.create(quotes=)
-        o += 1
-        print('OUT ', o)
-    print(time.time()-a)
+                Quotes.objects.create(quotes=text,
+                                      author=Author.objects.get_or_create(name=author,
+                                                                          born_info=born_date+born_location,
+                                                                          description=description_text)[0])
+                p += 1
+                if p == 5:
+                    break
+                sys.stdout.write(f'QUOTE     {p}')
+
+        page += 1
+        sys.stdout.write(f'OUT {page}')
+        sys.stdout.write(f'QUOTES    {p}')
+    sys.stdout.write(str(time.time()-a))
